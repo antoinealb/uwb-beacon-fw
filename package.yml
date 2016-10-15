@@ -1,7 +1,7 @@
 dependency-dir: ./src
 
-# depends:
-#     -
+depends:
+  - test-runner
 
 target.arm:
     - src/board.c
@@ -10,14 +10,15 @@ target.arm:
     - src/mpu9250.c
     - src/main.c
 
-# source:
-#     -
+source:
+    - src/dw1000/dw1000.c
 
 include_directories:
     - src/
 
-# tests:
-#     -
+tests:
+    - tests/dw1000/test_driver.cpp
+    - tests/dw1000/mocks.cpp
 
 templates:
     app_src.mk.jinja: app_src.mk
