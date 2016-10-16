@@ -37,3 +37,18 @@ uint32_t dw1000_id_read(dw1000_t *dev)
 
     return res;
 }
+
+void dw1000_gpio_configure(dw1000_t *dev, const int modes[DW1000_GPIO_COUNT])
+{
+    uint8_t command[] = {
+        HDR_WR | 0x26,
+        0x00,
+        (modes[5] << 0) | (modes[6] << 2) | (modes[7] << 4) | (modes[8] << 6),
+        (modes[1] << 0) | (modes[2] << 2) | (modes[3] << 4) | (modes[4] << 6),
+        modes[0] << 6
+    };
+
+    dev->acquire_cs(dev->arg, true);
+    dev->write(dev->arg, command, sizeof(command));
+    dev->acquire_cs(dev->arg, false);
+}

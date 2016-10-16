@@ -48,3 +48,24 @@ TEST(DW1000DriverTestGroup, CanReadID)
     auto res = dw1000_id_read(&dev);
     CHECK_EQUAL(0xdeca0130, res);
 }
+
+TEST(DW1000DriverTestGroup, CanConfigureGPIO)
+{
+    int modes[DW1000_GPIO_COUNT] = {DW1000_GPIOx_MODE_GPIO, DW1000_GPIO1_MODE_SFDLED};
+
+    uint8_t command[] = {0xa6, 0x00, 0x00, 0x01, 0x00};
+
+    mock("dw1000").expectOneCall("cs_acquire")
+                  .withPointerParameter("arg", dev.arg)
+                  .withIntParameter("acquired", true);
+
+    mock("dw1000").expectOneCall("write")
+                  .withPointerParameter("arg", dev.arg)
+                  .withMemoryBufferParameter("buffer", command, sizeof(command));
+
+    mock("dw1000").expectOneCall("cs_acquire")
+                  .withPointerParameter("arg", dev.arg)
+                  .withIntParameter("acquired", false);
+
+    dw1000_gpio_configure(&dev, modes);
+}
