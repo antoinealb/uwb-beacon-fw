@@ -23,9 +23,9 @@ static void cmd_mpu_ping(BaseSequentialStream *chp, int argc, char **argv)
     (void) argv;
 
     /*
-     * SPI1 configuration structure for MPU9250.
-     * SPI1 is on APB2 @ 84MHz / 128 = 656.25kHz
-     * CPHA=1, CPOL=1, 8bits frames, MSb transmitted first.
+     * SPI2 configuration structure for MPU9250.
+     * SPI2 is on APB2 @ 84MHz / 128 = 656.25kHz
+     * CPHA=1, CPOL=1, 8bits frames, MSB transmitted first.
      */
     static SPIConfig spi_cfg = {
         .end_cb = NULL,
@@ -43,7 +43,46 @@ static void cmd_mpu_ping(BaseSequentialStream *chp, int argc, char **argv)
     } else {
         chprintf(chp, "MPU is not responding correctly\r\n");
     }
+}
 
+static void cmd_dw1000_ping(BaseSequentialStream *chp, int argc, char **argv)
+{
+    (void) argc;
+    (void) argv;
+
+    /*
+     * SPI1 configuration structure for DW1000.
+     * SPI1 is on APB2 @ 84MHz / 128 = 656.25kHz
+     * CPHA=0, CPOL=0, 8bits frames, MSB transmitted first.
+     */
+    static SPIConfig spi_cfg = {
+        .end_cb = NULL,
+        .ssport = GPIOA,
+        .sspad = GPIOA_UWB_CS_N,
+        .cr1 = SPI_CR1_BR_2 | SPI_CR1_BR_0
+    };
+    spiStart(&SPID1, &spi_cfg);
+
+    uint8_t txbuf[5] = {0x01};
+    uint8_t rxbuf[5];
+
+    chprintf(chp, "current state of the rst pin: %d\r\n", palReadPad(GPIOA, GPIOA_UWB_RST_N));
+
+    //palClearPad(GPIOA, GPIOA_UWB_RST_N);
+    //chThdSleepMilliseconds(100);
+    //palSetPad(GPIOA, GPIOA_UWB_RST_N);
+    //chThdSleepMilliseconds(100);
+
+    spiSelect(&SPID1);
+    spiExchange(&SPID1, 5, txbuf, rxbuf);
+    spiUnselect(&SPID1);
+
+    chprintf(chp, "Got the following answer:");
+    int i;
+    for (i = 0; i < 5; i++) {
+        chprintf(chp, "0x%x ", rxbuf[i]);
+    }
+    chprintf(chp, "\n");
 }
 
 
@@ -51,6 +90,7 @@ static ShellConfig shell_cfg;
 const ShellCommand shell_commands[] = {
     {"reboot", cmd_reboot},
     {"mpu_ping", cmd_mpu_ping},
+    {"dw", cmd_dw1000_ping},
     {NULL, NULL}
 };
 
